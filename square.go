@@ -4,26 +4,33 @@ import (
 	"fmt"
 )
 
-func generate(numbers []int) <-chan int {
-	output := make(chan int)
+type Combo struct {
+	original int
+	squared  int
+}
+
+func generate(numbers []int) <-chan Combo {
+	output := make(chan Combo)
 
 	go func() {
 		defer close(output)
 		for _, v := range numbers {
-			output <- v
+			combo := Combo{original: v}
+			output <- combo
 		}
 	}()
 
 	return output
 }
 
-func square(input <-chan int) <-chan int {
-	output := make(chan int)
+func square(input <-chan Combo) <-chan Combo {
+	output := make(chan Combo)
 
 	go func() {
 		defer close(output)
 		for v := range input {
-			output <- v * v
+			squared := v.original * v.original
+			output <- Combo{original: v.original, squared: squared}
 		}
 
 	}()
@@ -38,6 +45,6 @@ func main() {
 	output := square(input)
 
 	for v := range output {
-		fmt.Printf("%d ", v)
+		fmt.Printf("%d squared is %d\n", v.original, v.squared)
 	}
 }
